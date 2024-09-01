@@ -21,7 +21,7 @@ console.log(ALL_STOPWORDS);
 const IGNORE_REGEX = /(.+) reacted (.+) to your message/;
 
 const ShowData = () => {
-  const [rawData] = useAtom(combinedPackageAtom);
+  const [rawData] = useAtom(analysedAtom);
   if (rawData.state === "hasError") return <>{rawData.error}</>;
   if (rawData.state === "loading") return <>Loading...</>;
   const data = rawData.data;
@@ -183,7 +183,7 @@ const ShowData = () => {
 
 type TreeItem = { [x: string]: TreeItem } | { data: any };
 const buildTree = (files: { path: string }[]): TreeItem => {
-  let tree: TreeItem = {};
+  const tree: TreeItem = {};
   for (const file of files) {
     const path = file.path as string;
     const components = path
@@ -191,7 +191,7 @@ const buildTree = (files: { path: string }[]): TreeItem => {
       .filter((e) => e)
       .slice(1);
 
-    var cur = tree;
+    let cur = tree;
     for (let i = 0; i < components.length - 1; i++) {
       const name = components[i];
       if (!cur[name]) cur[name] = {};
@@ -259,22 +259,24 @@ const rawDataAtom = atom(async (get) => {
   );
   return schemas;
 });
-const combinedPackageAtom = loadable(
+const analysedAtom = loadable(
   atom(async (get) => {
     const rawData = await get(rawDataAtom);
     if (!rawData) return null;
-    return await combineFiles(rawData);
+    return await analyse(rawData);
   })
 );
 
-async function combineFiles(files: RootSchema[]) {
+async function analyse(files: RootSchema[]) {
   console.log(files);
   try {
     const participants = Array.from(
       new Set<string>(files.flatMap((e) => e.participants.map((e) => e.name)))
     );
 
-    const messages = files.flatMap((e) => e.messages);
+    const messages = files
+      .flatMap((e) => e.messages)
+      .filter((a) => !IGNORE_REGEX.test(a.content ?? ""));
 
     let pToMessages: { [x: string]: number } = {};
     let pToCharacters: { [x: string]: number } = {};
@@ -287,8 +289,6 @@ async function combineFiles(files: RootSchema[]) {
     let mentions: { [x: string]: number } = {};
 
     for (const message of messages) {
-      if (!!message.content && IGNORE_REGEX.test(message.content)) continue;
-
       pToMessages[message.sender_name] =
         (pToMessages[message.sender_name] ?? 0) + 1;
 
@@ -366,26 +366,39 @@ const FileDropzone = () => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
-    <div {...getRootProps()}>
-      <input {...getInputProps()} />
-      {isDragActive ? (
-        <p>Right here!</p>
-      ) : (
-        <p>Drop your Facebook data folder here.</p>
-      )}
+    <div>
+      <div {...getRootProps()}>
+        <input {...getInputProps()} />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "60px",
+            borderRadius: 10,
+            backgroundColor: "grey",
+          }}
+        >
+          <div style={{ color: "white" }}>
+            Drop your Facebook data folder here.
+          </div>
+        </div>
+      </div>
+      <div>Facebook data package analyser &copy; 2024 Jackson Rakena</div>
     </div>
   );
 };
 
 function App() {
+  const selectedFiles = useAtomValue(selectedFilesAtom);
   const lmt = useAtomValue(listOfMessageThreads);
   const [selectedThreadName, setSelectedThreadName] = useAtom(
     selectedThreadNameAtom
   );
   return (
     <>
-      <FileDropzone />
-      {!selectedThreadName && selectedFilesAtom && (
+      {!selectedFiles && <FileDropzone />}
+      {!selectedThreadName && (
         <>
           {lmt?.map((l) => (
             <div
@@ -398,7 +411,7 @@ function App() {
           ))}
         </>
       )}
-      <ShowData />
+      {selectedThreadName && <ShowData />}
     </>
   );
 }
