@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 import { compositeTreeAtom } from "../analysis/state";
 import { resolveFileInTree } from "../files/fs";
-import { Message, MessageReaction } from "../schema";
+import { Message, ReactionElement } from "../schema";
 
 export const DisplayMessage = (props: { message: Message }) => {
   const tree = useAtomValue(compositeTreeAtom);
@@ -45,7 +45,7 @@ export const DisplayMessage = (props: { message: Message }) => {
           props.message.reactions?.reduce<{ [x: string]: string[] }>(
             (
               reactionMap: { [x: string]: string[] },
-              incomingReaction: MessageReaction
+              incomingReaction: ReactionElement
             ) => {
               return {
                 ...reactionMap,

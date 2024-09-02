@@ -5,43 +5,66 @@ export interface MessageManifestFileFormat {
   is_still_participant: boolean;
   thread_path: string;
   magic_words: MagicWord[];
-  image: ImageReference;
+  image: Image;
   joinable_mode: JoinableMode;
 }
-export interface Participant {
-  name: string;
-}
-export interface Message {
-  sender_name: string;
-  timestamp_ms: number;
-  content?: string;
-  reactions?: MessageReaction[];
-  is_geoblocked_for_viewer: boolean;
-  photos?: ImageReference[];
-  gifs?: MessageGif[];
-  share?: ContentShareInfo;
-}
-export interface MessageReaction {
-  reaction: string;
-  actor: string;
-}
-export interface MessageGif {
+
+export interface Image {
   uri: string;
+  creation_timestamp: number;
 }
-export interface ContentShareInfo {
+
+export interface JoinableMode {
+  mode: number;
   link: string;
-  share_text: string;
 }
+
 export interface MagicWord {
   magic_word: string;
   creation_timestamp_ms: number;
   animation_emoji: string;
 }
-export interface ImageReference {
-  uri: string;
-  creation_timestamp: number;
+
+export interface Message {
+  sender_name: string;
+  timestamp_ms: number;
+  content?: string;
+  reactions?: ReactionElement[];
+  is_geoblocked_for_viewer: boolean;
+  photos?: Image[];
+  gifs?: GIF[];
+  share?: Share;
+  is_unsent?: boolean;
+  videos?: Image[];
+  call_duration?: number;
+  sticker?: Sticker;
+  bumped_message_metadata?: BumpedMessageMetadata;
+  files?: Image[];
 }
-export interface JoinableMode {
-  mode: number;
+
+export interface BumpedMessageMetadata {
+  is_bumped: boolean;
+}
+
+export interface GIF {
+  uri: string;
+}
+
+export interface ReactionElement {
+  reaction: string;
+  actor: string;
+}
+
+export interface Share {
   link: string;
+  share_text?: string;
+}
+
+export interface Sticker {
+  uri: string;
+  ai_stickers: unknown[];
+}
+
+export interface Participant {
+  name: string;
 }
