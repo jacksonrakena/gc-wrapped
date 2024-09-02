@@ -37,7 +37,7 @@ export const DisplayMessage = (props: { message: Message }) => {
       <VStack alignItems={"start"} pb={"25px"} pt={"10px"} px={"20px"}>
         <Box>{props.message.content}</Box>
         {allPhotosCached.map((photo) => (
-          <div>
+          <div key={photo.uri}>
             <img src={photo.uri} />
           </div>
         ))}
@@ -59,7 +59,7 @@ export const DisplayMessage = (props: { message: Message }) => {
           ) ?? {}
         ).map(([reaction, reactors]) => {
           return (
-            <div style={{ color: "grey" }}>
+            <div key={reaction} style={{ color: "grey" }}>
               {reaction} {reactors.join(", ")}
             </div>
           );

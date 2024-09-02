@@ -1,21 +1,3 @@
-export type TheNameSchema = string;
-export type TheParticipantsSchema = Participant[];
-export type TheSenderNameSchema = string;
-export type TheTimestampMsSchema = number;
-export type TheContentSchema = string;
-export type TheReactionSchema = string;
-export type TheActorSchema = string;
-export type TheUriSchema = string;
-export type TheCreationTimestampSchema = number;
-export type TheLinkSchema = string;
-export type TheShareTextSchema = string;
-export type TheThreadPathSchema = string;
-export type TheMagicWordSchema = string;
-export type TheCreationTimestampMsSchema = number;
-export type TheAnimationEmojiSchema = string;
-export type TheUriSchema2 = string;
-export type TheCreationTimestampSchema1 = number;
-
 export interface MessageManifestFileFormat {
   participants: Participant[];
   messages: Message[];
@@ -27,17 +9,17 @@ export interface MessageManifestFileFormat {
   joinable_mode: JoinableMode;
 }
 export interface Participant {
-  name: TheNameSchema;
+  name: string;
 }
 export interface Message {
-  sender_name: TheSenderNameSchema;
-  timestamp_ms: TheTimestampMsSchema;
-  content: TheContentSchema;
+  sender_name: string;
+  timestamp_ms: number;
+  content?: string;
   reactions?: MessageReaction[];
   is_geoblocked_for_viewer: boolean;
   photos?: ImageReference[];
   gifs?: MessageGif[];
-  share?: TheShareSchema;
+  share?: ContentShareInfo;
 }
 export interface MessageReaction {
   reaction: string;
@@ -46,14 +28,14 @@ export interface MessageReaction {
 export interface MessageGif {
   uri: string;
 }
-export interface TheShareSchema {
-  link: TheLinkSchema;
-  share_text: TheShareTextSchema;
+export interface ContentShareInfo {
+  link: string;
+  share_text: string;
 }
 export interface MagicWord {
-  magic_word: TheMagicWordSchema;
-  creation_timestamp_ms: TheCreationTimestampMsSchema;
-  animation_emoji: TheAnimationEmojiSchema;
+  magic_word: string;
+  creation_timestamp_ms: number;
+  animation_emoji: string;
 }
 export interface ImageReference {
   uri: string;

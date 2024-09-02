@@ -17,8 +17,9 @@ export async function analyse(files: MessageManifestFileFormat[]) {
     let pToMessages: { [x: string]: number } = {};
     let pToCharacters: { [x: string]: number } = {};
     let totalReactions: { [x: string]: number } = {};
-    let reactionsReceivedByAuthor: { [x: string]: { [x: string]: number } } =
-      {};
+    let reactionsReceivedByAuthor: {
+      [recipient: string]: { [emoji: string]: number };
+    } = {};
     let totalReactionsCount = 0;
     let messagesByMonth: { [x: string]: number } = {};
     let wordCount: { [x: string]: number } = {};

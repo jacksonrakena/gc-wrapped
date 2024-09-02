@@ -65,15 +65,18 @@ const ShowData = () => {
       </div>
       <div>
         {Object.entries(data.reactionsReceivedByAuthor)
-          .sort((b, a) => a[1] - b[1])
-          .map((ptm, i) => (
+          .map((ptm) => ({
+            user: ptm[0],
+            count: Object.values(ptm[1]).reduce((a, b) => a + b, 0),
+          }))
+          .sort((b, a) => a.count - b.count)
+          .map((datax, i) => (
             <div>
-              #{i + 1}: <strong>{ptm[0]}</strong>:{" "}
-              {Object.values(ptm[1]).reduce((a, b) => a + b, 0)} reactions (
+              #{i + 1}: <strong>{datax.user}</strong>: {datax.count} reactions (
               {Math.floor(
-                (Object.values(ptm[1]).reduce((a, b) => a + b, 0) /
+                (datax.count /
                   data.messages
-                    .flatMap((e) => e.content?.length ?? 0)
+                    .flatMap((e) => e.reactions?.length ?? 0)
                     .reduce((p, a) => p + a, 0)) *
                   100
               )}
@@ -81,13 +84,17 @@ const ShowData = () => {
             </div>
           ))}
       </div>
-      <div style={{ fontWeight: "bold", fontSize: "2em" }}>Total reactions</div>
+      <div style={{ fontWeight: "bold", fontSize: "2em" }}>
+        Top 10 most used reactions
+      </div>
       <div>
         {Object.entries(data.totalReactions)
           .sort((b, a) => a[1] - b[1])
+          .slice(0, 10)
           .map((ptm, i) => (
             <div>
-              #{i + 1}: <strong>{ptm[0]}</strong>: {ptm[1]}
+              #{i + 1}: <strong>{ptm[0]}</strong>
+              {ptm[1]}
             </div>
           ))}
       </div>
@@ -265,6 +272,7 @@ function App() {
                 {}
                 {lmt.data.map((l) => (
                   <Button
+                    key={l}
                     style={{ marginBottom: "10px" }}
                     onClick={() => {
                       setSelectedThreadName(l);
