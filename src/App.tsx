@@ -1,8 +1,4 @@
-import tokenize from "@stdlib/nlp-tokenize";
-import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { loadable } from "jotai/utils";
-import { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useAtom, useAtomValue } from "jotai";
 import {
   CartesianGrid,
   Line,
@@ -11,14 +7,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  analysedAtom,
+  listOfMessageThreads,
+  selectedFilesAtom,
+  selectedThreadNameAtom,
+} from "./analysis/state";
 import "./App.css";
-import { RootSchema } from "./schema";
+import { DisplayMessage } from "./display/DisplayMessage";
+import { FileDropzone } from "./files/FileDropzone";
 import { SLURS } from "./slurs";
 import { ALL_STOPWORDS } from "./stopwords";
-console.log(ALL_STOPWORDS.length);
-console.log(ALL_STOPWORDS);
-
-const IGNORE_REGEX = /(.+) reacted (.+) to your message/;
 
 const ShowData = () => {
   const [rawData] = useAtom(analysedAtom);
@@ -177,215 +176,59 @@ const ShowData = () => {
             </div>
           ))}
       </div>
-    </>
-  );
-};
-
-type TreeItem = { [x: string]: TreeItem } | { data: any };
-const buildTree = (files: { path: string }[]): TreeItem => {
-  const tree: TreeItem = {};
-  for (const file of files) {
-    const path = file.path as string;
-    const components = path
-      .split("/")
-      .filter((e) => e)
-      .slice(1);
-
-    let cur = tree;
-    for (let i = 0; i < components.length - 1; i++) {
-      const name = components[i];
-      if (!cur[name]) cur[name] = {};
-      cur = cur[name];
-    }
-    cur[components[components.length - 1]] = {
-      data: file,
-    };
-  }
-  return tree;
-};
-
-const selectedFilesAtom = atom<{ path: string }[] | null>(null);
-const compositeTreeAtom = atom((get) => {
-  const rawData = get(selectedFilesAtom);
-  if (!rawData) return null;
-  return buildTree(rawData);
-});
-const listOfMessageThreads = atom((get) => {
-  const tree = get(compositeTreeAtom);
-  if (!tree) return null;
-  const inbox = Object.keys(
-    tree["your_facebook_activity"]["messages"]["inbox"]
-  );
-  return inbox;
-});
-const selectedThreadNameAtom = atom<string | null>(null);
-const rawDataAtom = atom(async (get) => {
-  const selectedThreadName = get(selectedThreadNameAtom);
-  const tree = get(compositeTreeAtom);
-  if (!selectedThreadName || !tree) return null;
-  const inboxTree =
-    tree["your_facebook_activity"]["messages"]["inbox"][selectedThreadName];
-
-  const messageFiles = Object.keys(inboxTree).filter(
-    (e) => e.startsWith("message_") && e.endsWith(".json")
-  );
-
-  const schemas = await Promise.all(
-    messageFiles.map(
-      (filename) =>
-        new Promise<RootSchema>((resolve, reject) => {
-          try {
-            const reader = new FileReader();
-            reader.onabort = () => reject();
-            reader.onerror = () => reject();
-            reader.onload = () => {
-              const data = JSON.parse(
-                new TextDecoder().decode(reader.result as ArrayBuffer),
-                (k, v) => {
-                  if (typeof v === "string" || v instanceof String) {
-                    return decodeURIComponent(escape(v));
-                  }
-                  return v;
-                }
-              );
-              resolve(data as RootSchema);
-            };
-            reader.readAsArrayBuffer(inboxTree[filename].data);
-          } catch (e) {
-            reject(e);
-          }
-        })
-    )
-  );
-  return schemas;
-});
-const analysedAtom = loadable(
-  atom(async (get) => {
-    const rawData = await get(rawDataAtom);
-    if (!rawData) return null;
-    return await analyse(rawData);
-  })
-);
-
-async function analyse(files: RootSchema[]) {
-  console.log(files);
-  try {
-    const participants = Array.from(
-      new Set<string>(files.flatMap((e) => e.participants.map((e) => e.name)))
-    );
-
-    const messages = files
-      .flatMap((e) => e.messages)
-      .filter((a) => !IGNORE_REGEX.test(a.content ?? ""));
-
-    let pToMessages: { [x: string]: number } = {};
-    let pToCharacters: { [x: string]: number } = {};
-    let totalReactions: { [x: string]: number } = {};
-    let reactionsReceivedByAuthor: { [x: string]: { [x: string]: number } } =
-      {};
-    let totalReactionsCount = 0;
-    let messagesByMonth: { [x: string]: number } = {};
-    let wordCount: { [x: string]: number } = {};
-    let mentions: { [x: string]: number } = {};
-
-    for (const message of messages) {
-      pToMessages[message.sender_name] =
-        (pToMessages[message.sender_name] ?? 0) + 1;
-
-      pToCharacters[message.sender_name] =
-        (pToCharacters[message.sender_name] ?? 0) +
-        (message.content?.length ?? 0);
-
-      for (const r of message.reactions ?? []) {
-        totalReactions[r.reaction] = (totalReactions[r.reaction] ?? 0) + 1;
-        if (!reactionsReceivedByAuthor[message.sender_name])
-          reactionsReceivedByAuthor[message.sender_name] = {};
-
-        reactionsReceivedByAuthor[message.sender_name][r.reaction] =
-          (reactionsReceivedByAuthor[message.sender_name][r.reaction] ?? 0) + 1;
-      }
-      var d = new Date(message.timestamp_ms);
-      var bin = `${d.getFullYear()}-${d.getMonth()}`;
-      messagesByMonth[bin] = (messagesByMonth[bin] ?? 0) + 1;
-
-      if (message.content) {
-        for (const word of tokenize(message.content.toLowerCase())) {
-          wordCount[word] = (wordCount[word] ?? 0) + 1;
-        }
-        for (let p of participants) {
-          if (message.content.includes(p)) {
-            mentions[p] = (mentions[p] ?? 0) + 1;
-          }
-        }
-      }
-    }
-
-    let topRxn = Object.entries(totalReactions).sort(
-      (b, a) => a[1] - b[1]
-    )[0][0];
-    let mostLikedUser = Object.fromEntries(
-      participants.map((e) => [
-        e,
-        (() => {
-          try {
-            return reactionsReceivedByAuthor[e][topRxn] / pToMessages[e];
-          } catch (e) {
-            return 0;
-          }
-        })(),
-      ])
-    );
-
-    return {
-      participants: participants,
-      messages: messages,
-      pToCharacters,
-      pToMessages,
-      totalReactions,
-      reactionsReceivedByAuthor,
-      mostLikedUser,
-      topRxn,
-      messagesByMonth,
-      wordCount,
-      mentions,
-    };
-  } catch (e) {
-    console.log("Error processing: ", e);
-    return null;
-  }
-}
-
-const FileDropzone = () => {
-  const updateSelectedFilesAtom = useSetAtom(selectedFilesAtom);
-  const onDrop = useCallback(
-    (af: File[]) => {
-      updateSelectedFilesAtom(af as never);
-    },
-    [updateSelectedFilesAtom]
-  );
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
-
-  return (
-    <div>
-      <div {...getRootProps()}>
-        <input {...getInputProps()} />
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "60px",
-            borderRadius: 10,
-            backgroundColor: "grey",
-          }}
-        >
-          <div style={{ color: "white" }}>
-            Drop your Facebook data folder here.
-          </div>
-        </div>
+      <div style={{ fontWeight: "bold", fontSize: "2em" }}>
+        Who likes who the most?
       </div>
-      <div>Facebook data package analyser &copy; 2024 Jackson Rakena</div>
-    </div>
+      <div>
+        {Object.entries(data.topEmojiTargets).map((m) => {
+          let topPairs = Object.entries(m[1]).sort(
+            (a, b) =>
+              b[1][data.topRxn] / data.totalReactionsByUser[m[0]][data.topRxn] -
+              a[1][data.topRxn] / data.totalReactionsByUser[m[0]][data.topRxn]
+          );
+          let topPair = topPairs[0];
+          let secondPair = topPairs[1];
+          return (
+            <div>
+              {m[0]} likes <b>{topPair[0]}</b> (
+              {Math.floor(
+                (topPair[1][data.topRxn] /
+                  data.totalReactionsByUser[m[0]][data.topRxn]) *
+                  100
+              )}
+              % of their {data.topRxn} reactions){" "}
+              {secondPair && (
+                <>
+                  {" "}
+                  and <b>{secondPair[0]}</b> (
+                  {Math.floor(
+                    (secondPair[1][data.topRxn] /
+                      data.totalReactionsByUser[m[0]][data.topRxn]) *
+                      100
+                  )}
+                  % of their {data.topRxn} reactions) the most
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ fontWeight: "bold", fontSize: "2em" }}>
+        Most reacted messages
+      </div>
+      <div>
+        {Object.entries(data.mostReactedMessages)
+          .sort((a, b) => b[1].count - a[1].count)
+          .map(([reaction, message]) => {
+            return (
+              <div>
+                <DisplayMessage message={message} />({message.content}{" "}
+                {reaction})
+              </div>
+            );
+          })}
+      </div>
+    </>
   );
 };
 
