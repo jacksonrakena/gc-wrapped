@@ -1,9 +1,9 @@
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
 import { FileWithPath } from "react-dropzone";
+import { buildVirtualFileTree, resolveFileInTree, resolveFolderInTree } from "../files/fs";
 import { MessageManifestFileFormat } from "../schema";
 import { analyse } from "./analysis";
-import { buildVirtualFileTree } from "../files/fs";
 import { readDroppedFile } from "./read";
 
 export const selectedFilesAtom = atom<FileWithPath[] | null>(null);
@@ -16,11 +16,13 @@ export const compositeTreeAtom = atom((get) => {
 
 export const listOfMessageThreads = atom((get) => {
   const tree = get(compositeTreeAtom);
-  if (!tree) return null;
-  const inbox = Object.keys(
-    tree["your_facebook_activity"]["messages"]["inbox"]
+  if (!tree) return { hasError: false, data: null };
+  const inboxNode = resolveFolderInTree(
+    tree,
+    "your_facebook_activity/messages/inbox"
   );
-  return inbox;
+  if (!inboxNode) return { hasError: true, data: null };
+  return { data: Object.keys(inboxNode), hasError: false };
 });
 
 export const selectedThreadNameAtom = atom<string | null>(null);
@@ -29,8 +31,11 @@ export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
   const selectedThreadName = get(selectedThreadNameAtom);
   const tree = get(compositeTreeAtom);
   if (!selectedThreadName || !tree) return null;
-  const inboxTree =
-    tree["your_facebook_activity"]["messages"]["inbox"][selectedThreadName];
+  const inboxTree = resolveFolderInTree(
+    tree,
+    `your_facebook_activity/messages/inbox/${selectedThreadName}`
+  );
+  if (!inboxTree) return null;
 
   const messageFiles = Object.keys(inboxTree).filter(
     (e) => e.startsWith("message_") && e.endsWith(".json")
@@ -38,7 +43,7 @@ export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
 
   const schemas = await Promise.all(
     messageFiles.map((filename) =>
-      readDroppedFile<MessageManifestFileFormat>(inboxTree[filename].data)
+      readDroppedFile<MessageManifestFileFormat>(resolveFileInTree(inboxTree, filename)!.data)
     )
   );
   return schemas;

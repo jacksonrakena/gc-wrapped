@@ -1,7 +1,7 @@
 import tokenize from "@stdlib/nlp-tokenize";
 import { MessageManifestFileFormat } from "../schema";
 
-const IGNORE_REGEX = /(.+) reacted (.+) to your message/;
+const IGNORE_REGEX = /[rR]eacted (.+) to your message/;
 
 export async function analyse(files: MessageManifestFileFormat[]) {
   try {

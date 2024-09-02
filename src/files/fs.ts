@@ -29,7 +29,7 @@ export const buildVirtualFileTree = (files: FileWithPath[]): VfsNode => {
 export const resolvePathInTree = (
   node: VfsNode,
   path: string
-): VfsFileNode | null => {
+): VfsNode | null => {
   const components = path.split("/");
 
   let cur: VfsNode = node;
@@ -45,6 +45,23 @@ export const resolvePathInTree = (
     if (!cur[name]) return null;
     cur = cur[name];
   }
-  if (!cur.data) return null;
-  return cur as VfsFileNode;
+  return cur;
+};
+
+export const resolveFolderInTree = (
+  node: VfsNode,
+  path: string
+): VfsFolderNode | null => {
+  const item = resolvePathInTree(node, path);
+  if (!item || item.data) return null;
+  return item as VfsFolderNode;
+};
+
+export const resolveFileInTree = (
+  node: VfsNode,
+  path: string
+): VfsFileNode | null => {
+  const item = resolvePathInTree(node, path);
+  if (!item || !item.data) return null;
+  return item as VfsFileNode;
 };

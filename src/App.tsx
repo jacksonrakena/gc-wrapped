@@ -1,3 +1,4 @@
+import { Button, VStack } from "@chakra-ui/react";
 import { useAtom, useAtomValue } from "jotai";
 import {
   CartesianGrid,
@@ -214,20 +215,31 @@ const ShowData = () => {
         })}
       </div>
       <div style={{ fontWeight: "bold", fontSize: "2em" }}>
-        Most reacted messages
+        Most {data.topRxn} message
       </div>
-      <div>
-        {Object.entries(data.mostReactedMessages)
-          .sort((a, b) => b[1].count - a[1].count)
-          .map(([reaction, message]) => {
-            return (
-              <div>
-                <DisplayMessage message={message} />({message.content}{" "}
-                {reaction})
-              </div>
-            );
-          })}
-      </div>
+      <VStack spacing={32}>
+        {(() => {
+          var datax = data.mostReactedMessages[data.topRxn];
+          var message = datax;
+          var index = data.messages.findIndex(
+            (m) =>
+              m.timestamp_ms == message.timestamp_ms &&
+              m.sender_name == message.sender_name
+          );
+
+          return (
+            <VStack>
+              {index != -1 && (
+                <DisplayMessage message={data.messages[index + 1]} />
+              )}
+              <DisplayMessage message={message} />
+              {index != -1 && (
+                <DisplayMessage message={data.messages[index - 1]} />
+              )}
+            </VStack>
+          );
+        })()}
+      </VStack>
     </>
   );
 };
@@ -243,15 +255,27 @@ function App() {
       {!selectedFiles && <FileDropzone />}
       {!selectedThreadName && (
         <>
-          {lmt?.map((l) => (
-            <div
-              onClick={() => {
-                setSelectedThreadName(l);
-              }}
-            >
-              {l}
-            </div>
-          ))}
+          {lmt.hasError && (
+            <>The Facebook data archive you uploaded is invalid.</>
+          )}
+          {lmt.data && (
+            <>
+              <h2>Select the Messages thread you'd like to analyse:</h2>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {}
+                {lmt.data.map((l) => (
+                  <Button
+                    style={{ marginBottom: "10px" }}
+                    onClick={() => {
+                      setSelectedThreadName(l);
+                    }}
+                  >
+                    {l}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
       {selectedThreadName && <ShowData />}
