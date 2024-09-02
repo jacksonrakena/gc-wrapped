@@ -5,6 +5,7 @@ const IGNORE_REGEX = /[rR]eacted (.+) to your message/;
 
 export async function analyse(files: MessageManifestFileFormat[]) {
   try {
+    const t0 = Date.now();
     const participants = Array.from(
       new Set<string>(files.flatMap((e) => e.participants.map((e) => e.name)))
     );
@@ -106,6 +107,9 @@ export async function analyse(files: MessageManifestFileFormat[]) {
       ])
     );
 
+    const totalTime = Date.now() - t0;
+
+    console.log(`Processed ${messages.length} messages in ${totalTime}ms`);
     return {
       participants: participants,
       messages: messages,
@@ -121,6 +125,7 @@ export async function analyse(files: MessageManifestFileFormat[]) {
       topEmojiTargets,
       totalReactionsByUser,
       mostReactedMessages,
+      totalTime,
     };
   } catch (e) {
     console.log("Error processing: ", e);
