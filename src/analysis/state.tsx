@@ -1,4 +1,4 @@
-import { BlobReader, Entry, ZipReader } from "@zip.js/zip.js";
+import { Entry } from "@zip.js/zip.js";
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
 import { FileWithPath } from "react-dropzone";
@@ -7,9 +7,9 @@ import {
   resolveFileInTree,
   resolveFolderInTree,
 } from "../files/vfs";
+import { readEntryAsJson, readZipFiles } from "../files/zip";
 import { MessageManifestFileFormat } from "../schema";
 import { analyse } from "./analysis";
-import { readEntryAsJson } from "./read";
 
 export const selectedFilesAtom = atom<FileWithPath[] | null>(null);
 
@@ -19,19 +19,7 @@ export const archiveFilesAtom = loadable(
     if (!uploadedFiles) return null;
 
     if (uploadedFiles.length === 0) throw "You didn't upload any files.";
-    let entries: Entry[] = [];
-    for (const file of uploadedFiles) {
-      if (file.type !== "application/zip") {
-        throw `file ${file.name}: expected a ZIP file, like 'facebook-your_username-02_09_2024-jKOnRXtv.zip'.`;
-      }
-      try {
-        const zr = new ZipReader(new BlobReader(file));
-        entries = entries.concat(await zr.getEntries());
-      } catch (e) {
-        throw `file ${file.name}: ${e}`;
-      }
-    }
-    return entries;
+    return await readZipFiles(uploadedFiles);
   })
 );
 

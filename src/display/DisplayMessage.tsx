@@ -1,9 +1,9 @@
 import { Box, Divider, VStack } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { createObjectUrl } from "../analysis/read";
 import { virtualFileTreeAtom } from "../analysis/state";
 import { resolveFileInTree } from "../files/vfs";
+import { createObjectUrl } from "../files/zip";
 import { Message } from "../schema";
 import { groupBy } from "../util/reduce";
 
