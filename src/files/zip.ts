@@ -7,6 +7,8 @@ import {
 } from "@zip.js/zip.js";
 import { FileWithPath } from "react-dropzone";
 
+const ZIP_MIME_TYPES = ["application/x-zip-compressed", "application/zip"];
+
 /**
  * This fuckery is because Facebook encodes in Latin-1.
  */
@@ -21,7 +23,7 @@ const fbAwareJsonParse = (text: string) => {
 export const readZipFiles = async (files: FileWithPath[]) => {
   let entries: Entry[] = [];
   for (const file of files) {
-    if (file.type !== "application/zip") {
+    if (!ZIP_MIME_TYPES.includes(file.type)) {
       throw `file ${file.name}: expected a ZIP file, like 'facebook-your_username-02_09_2024-jKOnRXtv.zip'.`;
     }
     try {
