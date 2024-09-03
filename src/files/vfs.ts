@@ -1,5 +1,9 @@
 import { FileWithPath } from "react-dropzone";
-import { DeepTree } from "../util/objects";
+import {
+  DeepTree,
+  getDeepProperty,
+  transformDeepProperty,
+} from "../util/objects";
 
 type VfsFileNode = { data: FileWithPath };
 type VfsFolderNode = DeepTree<VfsFileNode>;
@@ -14,15 +18,7 @@ export const buildVirtualFileTree = (files: FileWithPath[]): VfsFolderNode => {
       .filter((e) => e)
       .slice(1);
 
-    let cur: VfsFolderNode = tree;
-    for (let i = 0; i < components.length - 1; i++) {
-      const name = components[i];
-      if (!cur[name]) cur[name] = {};
-      cur = cur[name] as VfsFolderNode;
-    }
-    cur[components[components.length - 1]] = {
-      data: file,
-    };
+    transformDeepProperty(tree, () => ({ data: file }), ...components);
   }
   return tree;
 };
@@ -32,21 +28,7 @@ export const resolvePathInTree = (
   path: string
 ): VfsNode | null => {
   const components = path.split("/");
-
-  let cur: VfsNode = node;
-  for (let i = 0; i < components.length; i++) {
-    const name = components[i];
-    // file encountered too early
-    if (cur.data) return null;
-
-    // must be folder node if !cur.data
-    cur = cur as VfsFolderNode;
-
-    // next component doesn't exist as child
-    if (!cur[name]) return null;
-    cur = cur[name];
-  }
-  return cur;
+  return getDeepProperty(node as VfsFolderNode, ...components);
 };
 
 export const resolveFolderInTree = (
