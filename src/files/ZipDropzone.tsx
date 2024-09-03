@@ -68,7 +68,15 @@ export const ZipDropzone = () => {
             </Box>
           </Box>
         )}
-        {awaitingDrop && <Box>Examples of Meta archive files:</Box>}
+        {awaitingDrop && (
+          <Box>
+            Meta archive files follow this format:
+            <Stack>
+              <Box>instagram-jacksonrakena-2024-09-02-0boqvIPd.zip</Box>
+              <Box>facebook-jacksonrakena7-02_09_2024-jKOnRXtv.zip</Box>
+            </Stack>
+          </Box>
+        )}
       </Stack>
     </Stack>
   );
