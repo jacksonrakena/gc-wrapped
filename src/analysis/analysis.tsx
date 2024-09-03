@@ -30,6 +30,11 @@ export async function analyse(files: MessageManifestFileFormat[]) {
         ]),
       ]),
     ];
+    // const participants = [
+    //   ...new Set<string>(
+    //     files.flatMap((e) => e.participants.map((e) => e.name))
+    //   ),
+    // ];
 
     const totalMessagesByAuthor: { [authorName: string]: number } = {};
     const totalCharactersByAuthor: { [authorName: string]: number } = {};

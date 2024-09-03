@@ -1,6 +1,7 @@
 import { Box, Divider, VStack } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
+import { createObjectUrl } from "../analysis/read";
 import { virtualFileTreeAtom } from "../analysis/state";
 import { resolveFileInTree } from "../files/vfs";
 import { Message } from "../schema";
@@ -8,19 +9,23 @@ import { groupBy } from "../util/reduce";
 
 export const DisplayMessage = (props: { message: Message }) => {
   const tree = useAtomValue(virtualFileTreeAtom);
-  const allPhotosCached = useMemo(
-    () =>
-      (props.message?.photos ?? [])
-        .map((photo) => {
-          if (!tree) return null;
-          const fileBlob = resolveFileInTree(tree, photo.uri);
-          return fileBlob
-            ? { ...photo, uri: URL.createObjectURL(fileBlob) }
-            : null;
-        })
-        .filter((e) => !!e),
-    [props.message, tree]
-  );
+  const [allPhotos, setAllPhotos] = useState<{ uri: string }[]>([]);
+  useEffect(() => {
+    (async () => {
+      const resolvedPhotos = (
+        await Promise.all(
+          props.message?.photos?.map(async (photo) => {
+            if (!tree) return null;
+            const entry = resolveFileInTree(tree, photo.uri);
+            if (!entry) return null;
+            return { uri: await createObjectUrl(entry) };
+          }) ?? []
+        )
+      ).filter((e) => !!e && !!e.uri) as { uri: string }[];
+      setAllPhotos(resolvedPhotos);
+    })();
+  }, [props.message.photos, tree]);
+
   if (!props.message) return <></>;
   return (
     <VStack
@@ -38,7 +43,7 @@ export const DisplayMessage = (props: { message: Message }) => {
       <Divider />
       <VStack alignItems={"start"} pb={"25px"} pt={"10px"} px={"20px"}>
         <Box>{props.message.content}</Box>
-        {allPhotosCached.map((photo) => (
+        {allPhotos.map((photo) => (
           <div key={photo.uri}>
             <img src={photo.uri} />
           </div>

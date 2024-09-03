@@ -1,14 +1,13 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { useDropzone } from "react-dropzone";
-import { availableThreadsAtom, selectedFilesAtom } from "../analysis/state";
+import { archiveFilesAtom, selectedFilesAtom } from "../analysis/state";
 
-export const FileDropzone = () => {
-  const selectedFiles = useAtomValue(selectedFilesAtom);
-  const threads = useAtomValue(availableThreadsAtom);
-  const updateSelectedFiles = useSetAtom(selectedFilesAtom);
+export const ZipDropzone = () => {
+  const setUploadedFiles = useSetAtom(selectedFilesAtom);
+  const parsedFiles = useAtomValue(archiveFilesAtom);
 
   const { getRootProps, getInputProps } = useDropzone({
-    onDrop: updateSelectedFiles,
+    onDrop: setUploadedFiles,
   });
 
   return (
@@ -26,12 +25,14 @@ export const FileDropzone = () => {
           }}
         >
           <div style={{ color: "white" }}>
-            {!selectedFiles && <>Drop your Facebook data folder here.</>}
-            {selectedFiles && !threads && <>Loading...</>}
+            {parsedFiles.state === "loading" && <>Reading your ZIP file...</>}
+            {parsedFiles.state === "hasData" && !parsedFiles.data && (
+              <>Drop your Meta archive ZIP file here.</>
+            )}
+            {parsedFiles.state === "hasError" && <>{parsedFiles.error}</>}
           </div>
         </div>
       </div>
-      <div>Facebook data package analyser &copy; 2024 Jackson Rakena</div>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useAtom, useAtomValue } from "jotai";
+import { ErrorBoundary } from "react-error-boundary";
 import {
   Area,
   AreaChart,
@@ -25,13 +26,13 @@ import {
 } from "recharts";
 import {
   analysedAtom,
+  archiveFilesAtom,
   availableThreadsAtom,
-  selectedFilesAtom,
   selectedThreadNameAtom,
 } from "./analysis/state";
 import "./App.css";
 import { DisplayMessage } from "./display/DisplayMessage";
-import { FileDropzone } from "./files/FileDropzone";
+import { ZipDropzone } from "./files/ZipDropzone";
 import { SLURS } from "./slurs";
 import { ALL_STOPWORDS } from "./stopwords";
 const stringToColour = (str: string) => {
@@ -85,7 +86,8 @@ const renderTooltipContent = (o: TooltipProps<number, string>) => {
 
 const ShowData = () => {
   const [rawData] = useAtom(analysedAtom);
-  if (rawData.state === "hasError") return <>{rawData.error?.toString()}</>;
+  if (rawData.state === "hasError")
+    return <>Analysis failed: {rawData.error?.toString()}</>;
   if (rawData.state === "loading") return <>Loading...</>;
   const data = rawData.data;
   if (!data) return <>Not loaded.</>;
@@ -498,14 +500,18 @@ const MyCustomNode = ({
 };
 
 function App() {
-  const selectedFiles = useAtomValue(selectedFilesAtom);
+  const selectedFiles = useAtomValue(archiveFilesAtom);
   const lmt = useAtomValue(availableThreadsAtom);
   const [selectedThreadName, setSelectedThreadName] = useAtom(
     selectedThreadNameAtom
   );
   return (
     <>
-      {!selectedFiles && <FileDropzone />}
+      {(selectedFiles.state !== "hasData" || !selectedFiles.data) && (
+        <>
+          <ZipDropzone />
+        </>
+      )}
       {!selectedThreadName && (
         <>
           {lmt.hasError && (
@@ -532,9 +538,16 @@ function App() {
           )}
         </>
       )}
-      {selectedThreadName && <ShowData />}
+      <ErrorBoundary FallbackComponent={ErrorState}>
+        {selectedThreadName && <ShowData />}
+      </ErrorBoundary>
+
+      <div>Meta data package analyser &copy; 2024 Jackson Rakena</div>
     </>
   );
 }
 
+const ErrorState = ({ error }: { error: unknown }) => {
+  return <>There was an issue showing your analysis: {error?.toString()}</>;
+};
 export default App;

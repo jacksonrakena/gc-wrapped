@@ -1,25 +1,19 @@
-import { FileWithPath } from "react-dropzone";
+import { Entry } from "@zip.js/zip.js";
 import {
   DeepTree,
   getDeepProperty,
   transformDeepProperty,
 } from "../util/objects";
 
-type VfsFileNode = FileWithPath;
+type VfsFileNode = Entry;
 type VfsFolderNode = DeepTree<VfsFileNode>;
 type VfsNode = VfsFileNode | VfsFolderNode;
 
 export const buildVirtualFileTree = (files: VfsFileNode[]): VfsFolderNode => {
   const tree: VfsFolderNode = {};
   for (const file of files) {
-    if (!file.path) {
-      console.log("Received invalid file with no path, skipping", file);
-      continue;
-    }
-    const components = file.path
-      .split("/")
-      .filter((e) => e)
-      .slice(1);
+    if (file.directory) continue;
+    const components = file.filename.split("/").filter((e) => e);
 
     transformDeepProperty(tree, () => file, ...components);
   }
@@ -39,7 +33,7 @@ export const resolveFolderInTree = (
   path: string
 ): VfsFolderNode | null => {
   const item = resolvePathInTree(node, path);
-  if (!item || item.path) return null;
+  if (!item || item.filename) return null;
   return item as VfsFolderNode;
 };
 
@@ -48,6 +42,6 @@ export const resolveFileInTree = (
   path: string
 ): VfsFileNode | null => {
   const item = resolvePathInTree(node, path);
-  if (!item || !item.path) return null;
+  if (!item || !item.filename) return null;
   return item as VfsFileNode;
 };
