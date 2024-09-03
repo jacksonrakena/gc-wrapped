@@ -10,7 +10,7 @@ export const DisplayMessage = (props: { message: Message }) => {
   const tree = useAtomValue(virtualFileTreeAtom);
   const allPhotosCached = useMemo(
     () =>
-      (props.message.photos ?? [])
+      (props.message?.photos ?? [])
         .map((photo) => {
           if (!tree) return null;
           const fileBlob = resolveFileInTree(tree, photo.uri);
@@ -21,6 +21,7 @@ export const DisplayMessage = (props: { message: Message }) => {
         .filter((e) => !!e),
     [props.message, tree]
   );
+  if (!props.message) return <></>;
   return (
     <VStack
       alignItems={"start"}

@@ -438,9 +438,9 @@ const ShowData = () => {
       </div>
       <VStack spacing={32}>
         {(() => {
-          var datax = data.mostReactedMessages[data.topRxn];
-          var message = datax;
-          var index = data.messages.findIndex(
+          const message = data.mostReactedMessages[data.topRxn];
+          if (!message) return <></>;
+          const index = data.messages.findIndex(
             (m) =>
               m.timestamp_ms == message.timestamp_ms &&
               m.sender_name == message.sender_name
@@ -448,11 +448,11 @@ const ShowData = () => {
 
           return (
             <VStack>
-              {index != -1 && (
+              {index < data.messages.length - 1 && (
                 <DisplayMessage message={data.messages[index + 1]} />
               )}
-              <DisplayMessage message={message} />
-              {index != -1 && (
+              {message && <DisplayMessage message={message} />}
+              {index >= 1 && (
                 <DisplayMessage message={data.messages[index - 1]} />
               )}
             </VStack>
