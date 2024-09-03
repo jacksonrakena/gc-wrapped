@@ -29,12 +29,21 @@ export const virtualFileTreeAtom = atom((get) => {
   return buildVirtualFileTree(rawData.data);
 });
 
+export const platformNameAtom = atom((get) => {
+  const tree = get(virtualFileTreeAtom);
+  if (!tree) return null;
+  if (tree["your_facebook_activity"]) return "facebook";
+  if (tree["your_instagram_activity"]) return "instagram";
+  return null;
+});
+
 export const availableThreadsAtom = atom((get) => {
   const tree = get(virtualFileTreeAtom);
-  if (!tree) return { hasError: false, data: null };
+  const platformName = get(platformNameAtom);
+  if (!tree || !platformName) return { hasError: false, data: null };
   const inboxNode = resolveFolderInTree(
     tree,
-    "your_facebook_activity/messages/inbox"
+    `your_${platformName}_activity/messages/inbox`
   );
   if (!inboxNode) return { hasError: true, data: null };
   return { data: Object.keys(inboxNode), hasError: false };
@@ -45,10 +54,11 @@ export const selectedThreadNameAtom = atom<string | null>(null);
 export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
   const selectedThreadName = get(selectedThreadNameAtom);
   const tree = get(virtualFileTreeAtom);
-  if (!selectedThreadName || !tree) return null;
+  const platformName = get(platformNameAtom);
+  if (!selectedThreadName || !tree || !platformName) return null;
   const inboxTree = resolveFolderInTree(
     tree,
-    `your_facebook_activity/messages/inbox/${selectedThreadName}`
+    `your_${platformName}_activity/messages/inbox/${selectedThreadName}`
   );
   if (!inboxTree) return null;
 
