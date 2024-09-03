@@ -9,7 +9,7 @@ import { groupBy } from "../util/reduce";
 
 export const DisplayMessage = (props: { message: Message }) => {
   const tree = useAtomValue(virtualFileTreeAtom);
-  const [allPhotos, setAllPhotos] = useState<{ uri: string }[]>([]);
+  const [allPhotos, setAllPhotos] = useState<string[]>([]);
   useEffect(() => {
     (async () => {
       const resolvedPhotos = (
@@ -18,10 +18,10 @@ export const DisplayMessage = (props: { message: Message }) => {
             if (!tree) return null;
             const entry = resolveFileInTree(tree, photo.uri);
             if (!entry) return null;
-            return { uri: await createObjectUrl(entry) };
+            return await createObjectUrl(entry);
           }) ?? []
         )
-      ).filter((e) => !!e && !!e.uri) as { uri: string }[];
+      ).filter((e) => !!e) as string[];
       setAllPhotos(resolvedPhotos);
     })();
   }, [props.message.photos, tree]);
@@ -44,8 +44,8 @@ export const DisplayMessage = (props: { message: Message }) => {
       <VStack alignItems={"start"} pb={"25px"} pt={"10px"} px={"20px"}>
         <Box>{props.message.content}</Box>
         {allPhotos.map((photo) => (
-          <div key={photo.uri}>
-            <img src={photo.uri} />
+          <div key={photo}>
+            <img src={photo} />
           </div>
         ))}
         {Object.entries(
