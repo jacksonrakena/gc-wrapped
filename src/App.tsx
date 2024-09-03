@@ -8,7 +8,7 @@ import {
   Tabs,
   VStack,
 } from "@chakra-ui/react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { ErrorBoundary } from "react-error-boundary";
 import {
   Area,
@@ -85,6 +85,7 @@ const renderTooltipContent = (o: TooltipProps<number, string>) => {
 };
 
 const ShowData = () => {
+  const setThread = useSetAtom(selectedThreadNameAtom);
   const [rawData] = useAtom(analysedAtom);
   if (rawData.state === "hasError")
     return <>Analysis failed: {rawData.error?.toString()}</>;
@@ -120,6 +121,13 @@ const ShowData = () => {
     });
   return (
     <>
+      <Button
+        onClick={() => {
+          setThread(null);
+        }}
+      >
+        Back
+      </Button>
       <div style={{ fontWeight: "bold", fontSize: "xl" }}>
         Analysed {data.messages.length} messages from {data.participants.length}{" "}
         participants in {data.totalTime}ms.
@@ -542,7 +550,9 @@ function App() {
         {selectedThreadName && <ShowData />}
       </ErrorBoundary>
 
-      <div>Meta data package analyser &copy; 2024 Jackson Rakena</div>
+      <Box mt={"48px"} color={"GrayText"}>
+        Meta data package analyser &copy; 2024 Jackson Rakena
+      </Box>
     </>
   );
 }
