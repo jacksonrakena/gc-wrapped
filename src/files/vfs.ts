@@ -1,11 +1,12 @@
 import { FileWithPath } from "react-dropzone";
+import { DeepTree } from "../util/objects";
 
 type VfsFileNode = { data: FileWithPath };
-type VfsFolderNode = { [childName: string]: VfsNode };
-type VfsNode = VfsFolderNode | VfsFileNode;
+type VfsFolderNode = DeepTree<VfsFileNode>;
+type VfsNode = VfsFileNode | VfsFolderNode;
 
-export const buildVirtualFileTree = (files: FileWithPath[]): VfsNode => {
-  const tree: VfsNode = {};
+export const buildVirtualFileTree = (files: FileWithPath[]): VfsFolderNode => {
+  const tree: VfsFolderNode = {};
   for (const file of files) {
     const path = file.path as string;
     const components = path
@@ -13,11 +14,11 @@ export const buildVirtualFileTree = (files: FileWithPath[]): VfsNode => {
       .filter((e) => e)
       .slice(1);
 
-    let cur: VfsNode = tree;
+    let cur: VfsFolderNode = tree;
     for (let i = 0; i < components.length - 1; i++) {
       const name = components[i];
       if (!cur[name]) cur[name] = {};
-      cur = cur[name];
+      cur = cur[name] as VfsFolderNode;
     }
     cur[components[components.length - 1]] = {
       data: file,
