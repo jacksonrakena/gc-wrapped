@@ -2,7 +2,8 @@ import tokenize from "@stdlib/nlp-tokenize";
 import { Message, MessageManifestFileFormat } from "../schema";
 import { deepAdd, deepIncrement } from "../util/objects";
 
-const IGNORE_REGEX = /[rR]eacted (.+) to your message/;
+const IGNORE_REGEXES = [/[rR]eacted (.+) to your message/, /Liked a message/];
+const CONTENT_IGNORABLE = [/(.+) sent an attachment./];
 
 export async function analyse(files: MessageManifestFileFormat[]) {
   try {
@@ -10,7 +11,7 @@ export async function analyse(files: MessageManifestFileFormat[]) {
 
     const messages = files
       .flatMap((e) => e.messages)
-      .filter((a) => !IGNORE_REGEX.test(a.content ?? ""));
+      .filter((a) => IGNORE_REGEXES.every((reg) => !reg.test(a.content ?? "")));
 
     /**
      * Q: Why does this hellish contraption exist?
@@ -104,7 +105,10 @@ export async function analyse(files: MessageManifestFileFormat[]) {
       deepIncrement(messagesByMonth, bin);
       deepIncrement(messagesByMonthAndAuthor, bin, message.sender_name);
 
-      if (message.content) {
+      if (
+        message.content &&
+        CONTENT_IGNORABLE.every((re) => !re.test(message.content ?? ""))
+      ) {
         for (const word of tokenize(message.content.toLowerCase())) {
           deepIncrement(totalCountByWord, word);
         }
