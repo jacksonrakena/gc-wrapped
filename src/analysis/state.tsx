@@ -48,7 +48,7 @@ export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
   const schemas = await Promise.all(
     messageFiles.map((filename) =>
       readDroppedFileJson<MessageManifestFileFormat>(
-        resolveFileInTree(inboxTree, filename)!.data
+        resolveFileInTree(inboxTree, filename)!
       )
     )
   );

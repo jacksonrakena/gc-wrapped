@@ -15,7 +15,7 @@ export const DisplayMessage = (props: { message: Message }) => {
           if (!tree) return null;
           const fileBlob = resolveFileInTree(tree, photo.uri);
           return fileBlob
-            ? { ...photo, uri: URL.createObjectURL(fileBlob.data) }
+            ? { ...photo, uri: URL.createObjectURL(fileBlob) }
             : null;
         })
         .filter((e) => !!e),
