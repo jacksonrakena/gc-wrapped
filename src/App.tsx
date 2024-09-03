@@ -56,7 +56,6 @@ const renderTooltipContent = (o: TooltipProps<number, string>) => {
   const { payload, label } = o;
   const total = payload.reduce((result, entry) => result + entry.value, 0);
   const v = payload.sort((a, b) => b.value - a.value);
-  console.log(v.length);
 
   return (
     <Box
@@ -90,23 +89,18 @@ const ShowData = () => {
   if (rawData.state === "loading") return <>Loading...</>;
   const data = rawData.data;
   if (!data) return <>Not loaded.</>;
-  const pmap = data.participants.map((e) => ({ name: e }));
-  const vmap = Object.keys(data.topEmojiTargets);
-  const vmap0 = Object.values(data.topEmojiTargets).flatMap((e) =>
-    Object.keys(e)
-  );
-  const allp = Array.from(new Set<string>([...vmap, ...vmap0])).map((e) => ({
+  const allp = data.participants.map((e) => ({
     name: e,
   }));
   const nodes = allp.flatMap((p) => [
     { name: p.name + "_send" },
     { name: p.name + "_rec" },
   ]);
-  const areaChartData = Object.keys(data.messagseByMonthAndUser)
+  const areaChartData = Object.keys(data.messagesByMonthAndAuthor)
     .flatMap((monthBin) => ({
       month: monthBin,
 
-      ...Object.entries(data.messagseByMonthAndUser[monthBin])
+      ...Object.entries(data.messagesByMonthAndAuthor[monthBin])
         .map(([user, count]) => ({
           [user]: count,
         }))
@@ -114,16 +108,13 @@ const ShowData = () => {
     }))
     .sort((a, b) => {
       const c = a.month.split("-");
-      const aDay = c[2];
       const aMonth = c[1];
       const aYear = c[0];
       const d = b.month.split("-");
-      const bDay = d[2];
       const bMonth = d[1];
       const bYear = d[0];
       if (aYear != bYear) return aYear - bYear;
-      if (aMonth != bMonth) return aMonth - bMonth;
-      return aDay - bDay;
+      return aMonth - bMonth;
     });
   return (
     <>
@@ -133,7 +124,7 @@ const ShowData = () => {
       </div>
       <div style={{ fontWeight: "bold", fontSize: "2em" }}>By messages</div>
       <div>
-        {Object.entries(data.pToMessages)
+        {Object.entries(data.totalMessagesByAuthor)
           .sort((b, a) => a[1] - b[1])
           .map((ptm, i) => (
             <div>
@@ -144,7 +135,7 @@ const ShowData = () => {
       </div>
       <div style={{ fontWeight: "bold", fontSize: "2em" }}>By characters</div>
       <div>
-        {Object.entries(data.pToCharacters)
+        {Object.entries(data.totalCharactersByAuthor)
           .sort((b, a) => a[1] - b[1])
           .map((ptm, i) => (
             <div>
@@ -188,7 +179,7 @@ const ShowData = () => {
         Top 10 most used reactions
       </div>
       <div>
-        {Object.entries(data.totalReactions)
+        {Object.entries(data.totalReactionsByEmoji)
           .sort((b, a) => a[1] - b[1])
           .slice(0, 10)
           .map((ptm, i) => (
@@ -262,7 +253,7 @@ const ShowData = () => {
           <Tooltip content={renderTooltipContent} />
           {Array.from(
             new Set<string>(
-              Object.values(data.messagseByMonthAndUser).flatMap((d) =>
+              Object.values(data.messagesByMonthAndAuthor).flatMap((d) =>
                 Object.keys(d)
               )
             )
@@ -286,11 +277,11 @@ const ShowData = () => {
             left: 0,
             bottom: 0,
           }}
-          data={Object.keys(data.messagseByMonthAndUser)
+          data={Object.keys(data.messagesByMonthAndAuthor)
             .flatMap((monthBin) => ({
               month: monthBin,
 
-              ...Object.entries(data.messagseByMonthAndUser[monthBin])
+              ...Object.entries(data.messagesByMonthAndAuthor[monthBin])
                 .map(([user, count]) => ({
                   [user]: count,
                 }))
@@ -313,7 +304,7 @@ const ShowData = () => {
           <Tooltip content={renderTooltipContent} />
           {Array.from(
             new Set<string>(
-              Object.values(data.messagseByMonthAndUser).flatMap((d) =>
+              Object.values(data.messagesByMonthAndAuthor).flatMap((d) =>
                 Object.keys(d)
               )
             )
@@ -330,7 +321,7 @@ const ShowData = () => {
       </div>
       <div style={{ fontWeight: "bold", fontSize: "2em" }}>Top words</div>
       <div>
-        {Object.entries(data.wordCount)
+        {Object.entries(data.totalCountByWord)
           .sort((a, b) => b[1] - a[1])
           .filter((e) => !ALL_STOPWORDS.includes(e[0]))
           .slice(0, 20)
@@ -349,16 +340,16 @@ const ShowData = () => {
       </div>
       <div>
         Total number of slur matches:{" "}
-        {SLURS.filter((e) => Object.keys(data.wordCount).includes(e))
-          .map((e) => data.wordCount[e])
+        {SLURS.filter((e) => Object.keys(data.totalCountByWord).includes(e))
+          .map((e) => data.totalCountByWord[e])
           .reduce((a, b) => a + b, 0)}
       </div>
       <div>
-        {SLURS.filter((e) => Object.keys(data.wordCount).includes(e))
-          .sort((a, b) => data.wordCount[b] - data.wordCount[a])
+        {SLURS.filter((e) => Object.keys(data.totalCountByWord).includes(e))
+          .sort((a, b) => data.totalCountByWord[b] - data.totalCountByWord[a])
           .map((slur) => (
             <div>
-              {slur}: {data.wordCount[slur]} uses
+              {slur}: {data.totalCountByWord[slur]} uses
             </div>
           ))}
       </div>
@@ -366,7 +357,7 @@ const ShowData = () => {
         Who is mentioned the most?
       </div>
       <div>
-        {Object.entries(data.mentions)
+        {Object.entries(data.totalMentionsByUser)
           .sort((a, b) => b[1] - a[1])
           .map((m) => (
             <div>
@@ -379,7 +370,7 @@ const ShowData = () => {
       </div>
       <Tabs>
         <TabList>
-          {Object.entries(data.totalReactions)
+          {Object.entries(data.totalReactionsByEmoji)
             .sort((b, a) => a[1] - b[1])
             .slice(0, 10)
             .map((ptm, i) => (
@@ -389,7 +380,7 @@ const ShowData = () => {
             ))}
         </TabList>
         <TabPanels>
-          {Object.entries(data.totalReactions)
+          {Object.entries(data.totalReactionsByEmoji)
             .sort((b, a) => a[1] - b[1])
             .slice(0, 10)
             .map((ptm, i) => (
@@ -406,7 +397,7 @@ const ShowData = () => {
                   }}
                   data={{
                     nodes: Array.from(nodes),
-                    links: Object.entries(data.topEmojiTargets).flatMap(
+                    links: Object.entries(data.allReactionsByReactor).flatMap(
                       ([reactor, targets]) => {
                         return Object.entries(targets).map(
                           ([target, emoji]) => {
@@ -438,7 +429,7 @@ const ShowData = () => {
       </div>
       <VStack spacing={32}>
         {(() => {
-          const message = data.mostReactedMessages[data.topRxn];
+          const message = data.mostReactedMessageByEmoji[data.topRxn];
           if (!message) return <></>;
           const index = data.messages.findIndex(
             (m) =>

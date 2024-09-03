@@ -7,13 +7,29 @@ const IGNORE_REGEX = /[rR]eacted (.+) to your message/;
 export async function analyse(files: MessageManifestFileFormat[]) {
   try {
     const t0 = Date.now();
-    const participants = Array.from(
-      new Set<string>(files.flatMap((e) => e.participants.map((e) => e.name)))
-    );
 
     const messages = files
       .flatMap((e) => e.messages)
       .filter((a) => !IGNORE_REGEX.test(a.content ?? ""));
+
+    /**
+     * Q: Why does this hellish contraption exist?
+     * A: The participants field in each message manifest only includes *current* members of a thread.
+     * Therefore, we need to capture not only the current participants, but also former members:
+     *  - anyone who has ever sent a message
+     *  - anyone who has ever reacted to another message
+     *
+     * Combining all three sources and pushing it into a set means we get a unique list of all participants, past and present.
+     */
+    const participants = [
+      ...new Set<string>([
+        ...files.flatMap((e) => e.participants.map((e) => e.name)),
+        ...messages.flatMap((e) => [
+          e.sender_name,
+          ...(e.reactions?.map((f) => f.actor) ?? []),
+        ]),
+      ]),
+    ];
 
     const totalMessagesByAuthor: { [authorName: string]: number } = {};
     const totalCharactersByAuthor: { [authorName: string]: number } = {};
@@ -123,22 +139,22 @@ export async function analyse(files: MessageManifestFileFormat[]) {
 
     console.log(`Processed ${messages.length} messages in ${totalTime}ms`);
     return {
-      participants: participants,
-      messages: messages,
-      pToCharacters: totalCharactersByAuthor,
-      pToMessages: totalMessagesByAuthor,
-      totalReactions: totalReactionsByEmoji,
+      participants,
+      messages,
+      totalCharactersByAuthor,
+      totalMessagesByAuthor,
+      totalReactionsByEmoji,
       reactionsReceivedByAuthor,
       mostLikedUser,
       topRxn,
       messagesByMonth,
-      wordCount: totalCountByWord,
-      mentions: totalMentionsByUser,
-      topEmojiTargets: allReactionsByReactor,
+      totalCountByWord,
+      totalMentionsByUser,
+      allReactionsByReactor,
       totalReactionsByUser,
-      mostReactedMessages: mostReactedMessageByEmoji,
+      mostReactedMessageByEmoji,
       totalTime,
-      messagseByMonthAndUser: messagesByMonthAndAuthor,
+      messagesByMonthAndAuthor,
     };
   } catch (e) {
     console.log("Error processing: ", e);
