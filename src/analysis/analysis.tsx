@@ -22,6 +22,9 @@ export async function analyse(files: MessageManifestFileFormat[]) {
     } = {};
     let totalReactionsCount = 0;
     let messagesByMonth: { [x: string]: number } = {};
+    let messagseByMonthAndUser: {
+      [monthBin: string]: { [actor: string]: number };
+    } = {};
     let wordCount: { [x: string]: number } = {};
     let mentions: { [x: string]: number } = {};
     let totalReactionsByUser: {
@@ -79,6 +82,9 @@ export async function analyse(files: MessageManifestFileFormat[]) {
       var d = new Date(message.timestamp_ms);
       var bin = `${d.getFullYear()}-${d.getMonth() + 1}`;
       messagesByMonth[bin] = (messagesByMonth[bin] ?? 0) + 1;
+      if (!messagseByMonthAndUser[bin]) messagseByMonthAndUser[bin] = {};
+      messagseByMonthAndUser[bin][message.sender_name] =
+        (messagseByMonthAndUser[bin][message.sender_name] ?? 0) + 1;
 
       if (message.content) {
         for (const word of tokenize(message.content.toLowerCase())) {
@@ -127,9 +133,10 @@ export async function analyse(files: MessageManifestFileFormat[]) {
       totalReactionsByUser,
       mostReactedMessages,
       totalTime,
+      messagseByMonthAndUser,
     };
   } catch (e) {
     console.log("Error processing: ", e);
-    return null;
+    throw e;
   }
 }

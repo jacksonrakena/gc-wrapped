@@ -1,12 +1,13 @@
 import { Box, Divider, VStack } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
-import { compositeTreeAtom } from "../analysis/state";
-import { resolveFileInTree } from "../files/fs";
-import { Message, ReactionElement } from "../schema";
+import { virtualFileTreeAtom } from "../analysis/state";
+import { resolveFileInTree } from "../files/vfs";
+import { Message } from "../schema";
+import { groupBy } from "../util/reduce";
 
 export const DisplayMessage = (props: { message: Message }) => {
-  const tree = useAtomValue(compositeTreeAtom);
+  const tree = useAtomValue(virtualFileTreeAtom);
   const allPhotosCached = useMemo(
     () =>
       (props.message.photos ?? [])
@@ -42,28 +43,12 @@ export const DisplayMessage = (props: { message: Message }) => {
           </div>
         ))}
         {Object.entries(
-          props.message.reactions?.reduce<{ [x: string]: string[] }>(
-            (
-              reactionMap: { [x: string]: string[] },
-              incomingReaction: ReactionElement
-            ) => {
-              return {
-                ...reactionMap,
-                [incomingReaction.reaction]: [
-                  ...(reactionMap[incomingReaction.reaction] ?? []),
-                  incomingReaction.actor,
-                ],
-              };
-            },
-            {}
-          ) ?? {}
-        ).map(([reaction, reactors]) => {
-          return (
-            <div key={reaction} style={{ color: "grey" }}>
-              {reaction} {reactors.join(", ")}
-            </div>
-          );
-        })}
+          groupBy(props.message.reactions ?? [], (e) => e.reaction)
+        ).map(([reaction, reactions]) => (
+          <div key={reaction} style={{ color: "grey" }}>
+            {reaction} {reactions.map((e) => e.actor).join(", ")}
+          </div>
+        ))}
         <div style={{ color: "grey" }}>
           {new Date(props.message.timestamp_ms).toLocaleString()}
         </div>

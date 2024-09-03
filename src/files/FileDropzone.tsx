@@ -1,8 +1,10 @@
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useDropzone } from "react-dropzone";
-import { selectedFilesAtom } from "../analysis/state";
+import { availableThreadsAtom, selectedFilesAtom } from "../analysis/state";
 
 export const FileDropzone = () => {
+  const selectedFiles = useAtomValue(selectedFilesAtom);
+  const threads = useAtomValue(availableThreadsAtom);
   const updateSelectedFiles = useSetAtom(selectedFilesAtom);
 
   const { getRootProps, getInputProps } = useDropzone({
@@ -24,7 +26,8 @@ export const FileDropzone = () => {
           }}
         >
           <div style={{ color: "white" }}>
-            Drop your Facebook data folder here.
+            {!selectedFiles && <>Drop your Facebook data folder here.</>}
+            {selectedFiles && !threads && <>Loading...</>}
           </div>
         </div>
       </div>

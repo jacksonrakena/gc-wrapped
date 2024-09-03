@@ -1,21 +1,25 @@
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
 import { FileWithPath } from "react-dropzone";
-import { buildVirtualFileTree, resolveFileInTree, resolveFolderInTree } from "../files/fs";
+import {
+  buildVirtualFileTree,
+  resolveFileInTree,
+  resolveFolderInTree,
+} from "../files/vfs";
 import { MessageManifestFileFormat } from "../schema";
 import { analyse } from "./analysis";
-import { readDroppedFile } from "./read";
+import { readDroppedFileJson } from "./read";
 
 export const selectedFilesAtom = atom<FileWithPath[] | null>(null);
 
-export const compositeTreeAtom = atom((get) => {
+export const virtualFileTreeAtom = atom((get) => {
   const rawData = get(selectedFilesAtom);
   if (!rawData) return null;
   return buildVirtualFileTree(rawData);
 });
 
-export const listOfMessageThreads = atom((get) => {
-  const tree = get(compositeTreeAtom);
+export const availableThreadsAtom = atom((get) => {
+  const tree = get(virtualFileTreeAtom);
   if (!tree) return { hasError: false, data: null };
   const inboxNode = resolveFolderInTree(
     tree,
@@ -29,7 +33,7 @@ export const selectedThreadNameAtom = atom<string | null>(null);
 
 export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
   const selectedThreadName = get(selectedThreadNameAtom);
-  const tree = get(compositeTreeAtom);
+  const tree = get(virtualFileTreeAtom);
   if (!selectedThreadName || !tree) return null;
   const inboxTree = resolveFolderInTree(
     tree,
@@ -43,7 +47,9 @@ export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
 
   const schemas = await Promise.all(
     messageFiles.map((filename) =>
-      readDroppedFile<MessageManifestFileFormat>(resolveFileInTree(inboxTree, filename)!.data)
+      readDroppedFileJson<MessageManifestFileFormat>(
+        resolveFileInTree(inboxTree, filename)!.data
+      )
     )
   );
   return schemas;

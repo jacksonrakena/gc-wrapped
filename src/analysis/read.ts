@@ -1,34 +1,20 @@
 import { FileWithPath } from "react-dropzone";
 
+/**
+ * This fuckery is because Facebook encodes in Latin-1.
+ */
+const fbAwareJsonParse = (text: string) => {
+  return JSON.parse(text, (_, v) =>
+    typeof v === "string" || v instanceof String
+      ? decodeURIComponent(escape(v.toString()))
+      : v
+  );
+};
+
 const decoder = new TextDecoder();
 
-export const readDroppedFile = <T>(data: FileWithPath) =>
-  new Promise<T>((resolve, reject) => {
-    try {
-      const reader = new FileReader();
-      reader.onabort = () => {
-        reject(reader.error ?? "aborted, unknown reason");
-      };
-      reader.onerror = () => {
-        reject(reader.error ?? "unknown error");
-      };
-      reader.onload = () => {
-        const data = JSON.parse(
-          decoder.decode(reader.result as ArrayBuffer),
-
-          /**
-           * This fuckery is because Facebook encodes in Latin-1.
-           */
-          (_, v) =>
-            typeof v === "string" || v instanceof String
-              ? decodeURIComponent(escape(v.toString()))
-              : v
-        );
-
-        resolve(data as T);
-      };
-      reader.readAsArrayBuffer(data);
-    } catch (e) {
-      reject(e);
-    }
-  });
+export const readDroppedFileJson = <T>(data: FileWithPath) =>
+  data
+    .arrayBuffer()
+    .then((ab) => decoder.decode(ab))
+    .then(fbAwareJsonParse) as Promise<T>;
