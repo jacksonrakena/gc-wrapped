@@ -7,7 +7,7 @@ import {
   resolveFileInTree,
   resolveFolderInTree,
 } from "../files/vfs";
-import { readEntryAsJson, readZipFiles } from "../files/zip";
+import { createObjectUrl, readEntryAsJson, readZipFiles } from "../files/zip";
 import { MessageManifestFileFormat } from "../schema";
 import { analyse } from "./analysis";
 
@@ -37,17 +37,56 @@ export const platformNameAtom = atom((get) => {
   return null;
 });
 
-export const availableThreadsAtom = atom((get) => {
-  const tree = get(virtualFileTreeAtom);
-  const platformName = get(platformNameAtom);
-  if (!tree || !platformName) return { hasError: false, data: null };
-  const inboxNode = resolveFolderInTree(
-    tree,
-    `your_${platformName}_activity/messages/inbox`
-  );
-  if (!inboxNode) return { hasError: true, data: null };
-  return { data: Object.keys(inboxNode), hasError: false };
-});
+export const availableThreadsAtom = loadable(
+  atom(async (get) => {
+    const tree = get(virtualFileTreeAtom);
+    const platformName = get(platformNameAtom);
+    if (!tree || !platformName) return null;
+    const inboxNode = resolveFolderInTree(
+      tree,
+      `your_${platformName}_activity/messages/inbox`
+    );
+    if (!inboxNode) throw "The Meta data archive you uploaded is invalid.";
+
+    const threadNames = (
+      await Promise.all(
+        Object.keys(inboxNode).map(async (threadName) => {
+          const leadFileNode = resolveFileInTree(
+            inboxNode,
+            `${threadName}/message_1.json`
+          );
+          if (!leadFileNode) return null;
+          const data = await readEntryAsJson<MessageManifestFileFormat>(
+            leadFileNode
+          );
+          if (!data) return null;
+          const image = data.image?.uri
+            ? resolveFileInTree(tree, data.image?.uri)
+            : null;
+          const imageUrl = image ? await createObjectUrl(image) : null;
+          if (image)
+            return {
+              id: threadName,
+              name: data.title,
+              participants: data.participants,
+              imageUrl: imageUrl,
+            };
+        })
+      )
+    )
+      .filter((e) => e)
+      .map(
+        (e) =>
+          e as {
+            id: string;
+            name: string;
+            participants: { name: string }[];
+            imageUrl: string | null;
+          }
+      );
+    return threadNames;
+  })
+);
 
 export const selectedThreadNameAtom = atom<string | null>(null);
 
@@ -78,8 +117,20 @@ export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
 
 export const analysedAtom = loadable(
   atom(async (get) => {
+    const tree = get(virtualFileTreeAtom);
+    if (!tree) return null;
     const rawData = await get(selectedThreadMessageManifestFilesAtom);
     if (!rawData) return null;
-    return await analyse(rawData);
+    const image = rawData[0].image?.uri
+      ? resolveFileInTree(tree, rawData[0].image?.uri)
+      : null;
+    const imageUrl = image ? await createObjectUrl(image) : null;
+    return {
+      ...(await analyse(rawData)),
+      meta: {
+        title: rawData[0].title,
+        imageUrl,
+      },
+    };
   })
 );

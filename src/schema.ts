@@ -5,7 +5,7 @@ export interface MessageManifestFileFormat {
   is_still_participant: boolean;
   thread_path: string;
   magic_words: MagicWord[];
-  image: Image;
+  image?: Image;
   joinable_mode: JoinableMode;
 }
 

@@ -39,7 +39,7 @@ export const readZipFiles = async (files: FileWithPath[]) => {
 export const readEntryAsJson = <T>(data: Entry) =>
   data.getData
     ? (data.getData(new TextWriter()).then(fbAwareJsonParse) as Promise<T>)
-    : (null as T);
+    : Promise.resolve(null as T);
 
 export const createObjectUrl = async (entry: Entry) => {
   if (!entry.getData) return null;
