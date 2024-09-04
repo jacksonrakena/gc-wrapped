@@ -2,9 +2,19 @@ import tokenize from "@stdlib/nlp-tokenize";
 import { Message, MessageManifestFileFormat } from "../schema";
 import { deepAdd, deepIncrement } from "../util/objects";
 
+/**
+ * Messages matching these regexes are always ignored, because they are reaction or like notifications.
+ */
 const IGNORE_REGEXES = [/[rR]eacted (.+) to your message/, /Liked a message/];
+
+/**
+ * Messages matching these regexes are not ignored for the purposes of counting intentional actions
+ * (i.e. sending content), but ARE ignored for all text and language processing (like counting word frequencies),
+ * because the text is assigned by Meta.
+ */
 const CONTENT_IGNORABLE = [/(.+) sent an attachment./];
 
+export type MessageThreadAnalysisResult = Awaited<ReturnType<typeof analyse>>;
 export async function analyse(files: MessageManifestFileFormat[]) {
   try {
     const t0 = Date.now();
@@ -30,12 +40,6 @@ export async function analyse(files: MessageManifestFileFormat[]) {
         ]),
       ]),
     ];
-    // const participants = [
-    //   ...new Set<string>(
-    //     files.flatMap((e) => e.participants.map((e) => e.name))
-    //   ),
-    // ];
-
     const totalMessagesByAuthor: { [authorName: string]: number } = {};
     const totalCharactersByAuthor: { [authorName: string]: number } = {};
     const totalReactionsByEmoji: { [reactionName: string]: number } = {};
@@ -90,8 +94,10 @@ export async function analyse(files: MessageManifestFileFormat[]) {
         );
         deepIncrement(totalReactionsByUser, r.actor, r.reaction);
       }
+
       for (const rxn of Object.keys(reactions)) {
         const count = reactions[rxn];
+
         if (
           !mostReactedMessageByEmoji[rxn] ||
           count > mostReactedMessageByEmoji[rxn].count
@@ -99,6 +105,7 @@ export async function analyse(files: MessageManifestFileFormat[]) {
           mostReactedMessageByEmoji[rxn] = { ...message, count };
         }
       }
+
       const d = new Date(message.timestamp_ms);
       const bin = `${d.getFullYear()}-${d.getMonth() + 1}`;
       deepIncrement(messagesByMonth, bin);
