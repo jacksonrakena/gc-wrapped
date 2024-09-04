@@ -1,10 +1,11 @@
 import { Box, Divider, VStack } from "@chakra-ui/react";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { virtualFileTreeAtom } from "../analysis/state";
+
 import { resolveFileInTree } from "../files/vfs";
 import { createObjectUrl } from "../files/zip";
 import { Message } from "../schema";
+import { virtualFileTreeAtom } from "../state/tree";
 import { groupBy } from "../util/reduce";
 
 export const DisplayMessage = (props: { message: Message }) => {

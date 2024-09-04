@@ -31,8 +31,9 @@ import {
   YAxis,
 } from "recharts";
 import { analyse } from "../../analysis/analysis";
-import { analysedAtom, selectedThreadNameAtom } from "../../analysis/state";
 import { SLURS } from "../../slurs";
+import { analysedAtom } from "../../state/analysis";
+import { selectedThreadNameAtom } from "../../state/threads";
 import { ALL_STOPWORDS } from "../../stopwords";
 import { stringToColour } from "../../util/colors";
 import { DisplayMessage } from "../DisplayMessage";

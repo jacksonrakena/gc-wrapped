@@ -1,41 +1,10 @@
-import { Entry } from "@zip.js/zip.js";
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
-import { FileWithPath } from "react-dropzone";
-import {
-  buildVirtualFileTree,
-  resolveFileInTree,
-  resolveFolderInTree,
-} from "../files/vfs";
-import { createObjectUrl, readEntryAsJson, readZipFiles } from "../files/zip";
+import { resolveFolderInTree, resolveFileInTree } from "../files/vfs";
+import { readEntryAsJson, createObjectUrl } from "../files/zip";
 import { MessageManifestFileFormat } from "../schema";
-import { analyse } from "./analysis";
-
-export const selectedFilesAtom = atom<FileWithPath[] | null>(null);
-
-export const archiveFilesAtom = loadable(
-  atom<Promise<Entry[] | null>>(async (get) => {
-    const uploadedFiles = get(selectedFilesAtom);
-    if (!uploadedFiles) return null;
-
-    if (uploadedFiles.length === 0) throw "You didn't upload any files.";
-    return await readZipFiles(uploadedFiles);
-  })
-);
-
-export const virtualFileTreeAtom = atom((get) => {
-  const rawData = get(archiveFilesAtom);
-  if (rawData.state !== "hasData" || !rawData.data) return null;
-  return buildVirtualFileTree(rawData.data);
-});
-
-export const platformNameAtom = atom((get) => {
-  const tree = get(virtualFileTreeAtom);
-  if (!tree) return null;
-  if (tree["your_facebook_activity"]) return "facebook";
-  if (tree["your_instagram_activity"]) return "instagram";
-  return null;
-});
+import { platformNameAtom } from "./platform";
+import { virtualFileTreeAtom } from "./tree";
 
 export const availableThreadsAtom = loadable(
   atom(async (get) => {
@@ -123,23 +92,3 @@ export const selectedThreadMessageManifestFilesAtom = atom(async (get) => {
   );
   return schemas;
 });
-
-export const analysedAtom = loadable(
-  atom(async (get) => {
-    const tree = get(virtualFileTreeAtom);
-    if (!tree) return null;
-    const rawData = await get(selectedThreadMessageManifestFilesAtom);
-    if (!rawData) return null;
-    const image = rawData[0].image?.uri
-      ? resolveFileInTree(tree, rawData[0].image?.uri)
-      : null;
-    const imageUrl = image ? await createObjectUrl(image) : null;
-    return {
-      ...(await analyse(rawData)),
-      meta: {
-        title: rawData[0].title,
-        imageUrl,
-      },
-    };
-  })
-);

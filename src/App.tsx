@@ -1,10 +1,11 @@
 import { Box, Button, Stack } from "@chakra-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ErrorBoundary } from "react-error-boundary";
-import { archiveFilesAtom, selectedThreadNameAtom } from "./analysis/state";
 import { ThreadAnalysis } from "./display/threads/ThreadAnalysis";
 import { ZipDropzone } from "./files/ZipDropzone";
 import { AllThreads } from "./menus/AllThreads";
+import { archiveFilesAtom } from "./state/files";
+import { selectedThreadNameAtom } from "./state/threads";
 
 function App() {
   const selectedFiles = useAtomValue(archiveFilesAtom);

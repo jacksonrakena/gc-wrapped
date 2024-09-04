@@ -1,7 +1,7 @@
 import { Box, Heading, Link, Stack } from "@chakra-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useDropzone } from "react-dropzone";
-import { archiveFilesAtom, selectedFilesAtom } from "../analysis/state";
+import { archiveFilesAtom, selectedFilesAtom } from "../state/files";
 
 export const ZipDropzone = () => {
   const setUploadedFiles = useSetAtom(selectedFilesAtom);

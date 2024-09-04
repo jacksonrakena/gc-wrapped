@@ -8,10 +8,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useAtomValue, useSetAtom } from "jotai";
-import {
-  availableThreadsAtom,
-  selectedThreadNameAtom,
-} from "../analysis/state";
+import { availableThreadsAtom, selectedThreadNameAtom } from "../state/threads";
 
 export const AllThreads = () => {
   const availableThreads = useAtomValue(availableThreadsAtom);
