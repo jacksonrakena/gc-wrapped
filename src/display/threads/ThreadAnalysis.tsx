@@ -37,8 +37,9 @@ import { ALL_STOPWORDS } from "../../stopwords";
 import { stringToColour } from "../../util/colors";
 import { DisplayMessage } from "../DisplayMessage";
 import { sortMonthBin } from "./area/sort";
-import { renderTooltipContent } from "./area/tooltips";
+import { areaChartTooltip } from "./area/tooltips";
 import { FlowNode } from "./sankey/FlowNode";
+import { TreemapNode } from "./treemap/TreemapNode";
 
 export const ThreadAnalysisContent = ({
   data,
@@ -77,6 +78,7 @@ export const ThreadAnalysisContent = ({
           <Heading size="lg">Total messages sent</Heading>
           <ResponsiveContainer width="100%" height={400}>
             <Treemap
+              content={<TreemapNode />}
               data={Object.entries(data.totalMessagesByAuthor)
                 .sort((b, a) => a[1] - b[1])
                 .map((ptm) => ({
@@ -96,6 +98,7 @@ export const ThreadAnalysisContent = ({
           <Heading size="lg">Total characters sent</Heading>
           <ResponsiveContainer width="100%" height={400}>
             <Treemap
+              content={<TreemapNode />}
               data={Object.entries(data.totalCharactersByAuthor)
                 .sort((b, a) => a[1] - b[1])
                 .map((ptm) => ({
@@ -116,6 +119,7 @@ export const ThreadAnalysisContent = ({
 
           <ResponsiveContainer width="100%" height={400}>
             <Treemap
+              content={<TreemapNode />}
               data={Object.entries(data.reactionsReceivedByAuthor)
                 .map((ptm) => ({
                   name: ptm[0],
@@ -212,7 +216,7 @@ export const ThreadAnalysisContent = ({
               <YAxis
                 tickFormatter={(decimal) => `${(decimal * 100).toFixed(0)}%`}
               />
-              <Tooltip content={renderTooltipContent} />
+              <Tooltip content={areaChartTooltip} />
               {Array.from(
                 new Set<string>(
                   Object.values(data.messagesByMonthAndAuthor).flatMap((d) =>
@@ -256,7 +260,7 @@ export const ThreadAnalysisContent = ({
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip content={renderTooltipContent} />
+              <Tooltip content={areaChartTooltip} />
               {Array.from(
                 new Set<string>(
                   Object.values(data.messagesByMonthAndAuthor).flatMap((d) =>
@@ -281,6 +285,7 @@ export const ThreadAnalysisContent = ({
 
           <ResponsiveContainer width="100%" height={400}>
             <Treemap
+              content={<TreemapNode />}
               data={Object.entries(data.totalCountByWord)
                 .sort((a, b) => b[1] - a[1])
                 .filter((e) => !ALL_STOPWORDS.includes(e[0]))
@@ -327,6 +332,7 @@ export const ThreadAnalysisContent = ({
               dataKey="count"
               nameKey="name"
               aspectRatio={4 / 3}
+              content={<TreemapNode />}
             >
               <Tooltip />
             </Treemap>

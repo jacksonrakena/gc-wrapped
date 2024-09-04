@@ -3,7 +3,7 @@ import { TooltipProps } from "recharts";
 import { stringToColour } from "../../../util/colors";
 import { getPercent } from "../../../util/percents";
 
-export const renderTooltipContent = (o: TooltipProps<number, string>) => {
+export const areaChartTooltip = (o: TooltipProps<number, string>) => {
   const { payload, label } = o;
   if (!payload) return <></>;
   const total = payload.reduce((result, entry) => result + entry.value, 0);
