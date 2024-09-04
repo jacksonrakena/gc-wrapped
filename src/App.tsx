@@ -1,5 +1,5 @@
-import { Box } from "@chakra-ui/react";
-import { useAtomValue } from "jotai";
+import { Box, Button, Stack } from "@chakra-ui/react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { ErrorBoundary } from "react-error-boundary";
 import { archiveFilesAtom, selectedThreadNameAtom } from "./analysis/state";
 import { ThreadAnalysis } from "./display/threads/ThreadAnalysis";
@@ -29,6 +29,21 @@ function App() {
 }
 
 const ErrorState = ({ error }: { error: unknown }) => {
-  return <>There was an issue showing your analysis: {error?.toString()}</>;
+  const setThread = useSetAtom(selectedThreadNameAtom);
+  return (
+    <>
+      <Stack>
+        {" "}
+        <Button
+          onClick={() => {
+            setThread(null);
+          }}
+        >
+          Back
+        </Button>
+      </Stack>
+      <Box>There was an issue showing your analysis: {error?.toString()}</Box>
+    </>
+  );
 };
 export default App;

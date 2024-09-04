@@ -117,8 +117,33 @@ export const ThreadAnalysis = () => {
   const setThread = useSetAtom(selectedThreadNameAtom);
   const [rawData] = useAtom(analysedAtom);
   if (rawData.state === "hasError")
-    return <>Analysis failed: {rawData.error?.toString()}</>;
-  if (rawData.state === "loading") return <>Loading...</>;
+    return (
+      <>
+        {" "}
+        <Button
+          onClick={() => {
+            setThread(null);
+          }}
+        >
+          Back
+        </Button>
+        Analysis failed: {rawData.error?.toString()}
+      </>
+    );
+  if (rawData.state === "loading")
+    return (
+      <>
+        {" "}
+        <Button
+          onClick={() => {
+            setThread(null);
+          }}
+        >
+          Back
+        </Button>
+        Loading...
+      </>
+    );
   const data = rawData.data;
   if (!data) return <>Not loaded.</>;
   const allp = data.participants.map((e) => ({
