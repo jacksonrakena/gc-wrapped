@@ -190,15 +190,7 @@ export const ThreadAnalysisContent = ({
           </ResponsiveContainer>
           <ResponsiveContainer width="100%" height={400}>
             <AreaChart
-              width={900}
-              height={500}
               stackOffset="expand"
-              margin={{
-                top: 10,
-                right: 30,
-                left: 0,
-                bottom: 0,
-              }}
               data={Object.keys(data.messagesByMonthAndAuthor)
                 .flatMap((monthBin) => ({
                   month: monthBin,
@@ -237,14 +229,6 @@ export const ThreadAnalysisContent = ({
 
           <ResponsiveContainer width="100%" height={400}>
             <AreaChart
-              width={900}
-              height={500}
-              margin={{
-                top: 10,
-                right: 30,
-                left: 0,
-                bottom: 0,
-              }}
               data={Object.keys(data.messagesByMonthAndAuthor)
                 .flatMap((monthBin) => ({
                   month: monthBin,
@@ -361,7 +345,7 @@ export const ThreadAnalysisContent = ({
           <Heading size="lg">Reaction distribution</Heading>
 
           <Tabs>
-            <TabList>
+            <TabList overflow={"scroll"}>
               {Object.entries(data.totalReactionsByEmoji)
                 .sort((b, a) => a[1] - b[1])
                 .slice(0, 10)
@@ -377,39 +361,41 @@ export const ThreadAnalysisContent = ({
                 .slice(0, 10)
                 .map((ptm, i) => (
                   <TabPanel key={i}>
-                    <Sankey
-                      width={900}
-                      height={600}
-                      nodePadding={10}
-                      margin={{
-                        top: 20,
-                        bottom: 50,
-                        left: 0,
-                        right: 150,
-                      }}
-                      data={{
-                        nodes: Array.from(nodes),
-                        links: Object.entries(
-                          data.allReactionsByReactor
-                        ).flatMap(([reactor, targets]) => {
-                          return Object.entries(targets).map(
-                            ([target, emoji]) => {
-                              return {
-                                source: nodes.findIndex(
-                                  (e) => e.name == reactor + "_send"
-                                ),
-                                target: nodes.findIndex(
-                                  (e) => e.name == target + "_rec"
-                                ),
-                                value: emoji[ptm[0]] ?? 0,
-                              };
-                            }
-                          );
-                        }),
-                      }}
-                      node={<FlowNode />}
-                      link={{ stroke: "#77c878" }}
-                    ></Sankey>
+                    <ResponsiveContainer width="100%" height={400}>
+                      <Sankey
+                        nodePadding={10}
+                        margin={{
+                          top: 20,
+                          bottom: 50,
+                          left: 0,
+                          right: 150,
+                        }}
+                        data={{
+                          nodes: Array.from(nodes),
+                          links: Object.entries(
+                            data.allReactionsByReactor
+                          ).flatMap(([reactor, targets]) => {
+                            return Object.entries(targets).map(
+                              ([target, emoji]) => {
+                                return {
+                                  source: nodes.findIndex(
+                                    (e) => e.name == reactor + "_send"
+                                  ),
+                                  target: nodes.findIndex(
+                                    (e) => e.name == target + "_rec"
+                                  ),
+                                  value: emoji[ptm[0]] ?? 0,
+                                };
+                              }
+                            );
+                          }),
+                        }}
+                        node={<FlowNode />}
+                        link={{ stroke: "#77c878" }}
+                      >
+                        <Tooltip />
+                      </Sankey>
+                    </ResponsiveContainer>
                   </TabPanel>
                 ))}
             </TabPanels>
