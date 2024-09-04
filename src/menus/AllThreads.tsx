@@ -25,7 +25,7 @@ export const AllThreads = () => {
       )}
       {availableThreads.state === "hasData" && availableThreads.data && (
         <Stack spacing={4}>
-          <Heading size="md">Your Messenger threads:</Heading>
+          <Heading size="md">Your threads:</Heading>
           <Stack spacing={8}>
             {availableThreads.data
               .sort((a, b) => b.participants.length - a.participants.length)

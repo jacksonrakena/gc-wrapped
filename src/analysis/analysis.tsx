@@ -5,7 +5,11 @@ import { deepAdd, deepIncrement } from "../util/objects";
 /**
  * Messages matching these regexes are always ignored, because they are reaction or like notifications.
  */
-const IGNORE_REGEXES = [/[rR]eacted (.+) to your message/, /Liked a message/];
+const IGNORE_REGEXES = [
+  /[rR]eacted (.+) to your message/,
+  /Liked a message/,
+  /(.+) liked a message/,
+];
 
 /**
  * Messages matching these regexes are not ignored for the purposes of counting intentional actions

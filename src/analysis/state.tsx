@@ -55,22 +55,31 @@ export const availableThreadsAtom = loadable(
             inboxNode,
             `${threadName}/message_1.json`
           );
-          if (!leadFileNode) return null;
+          if (!leadFileNode) {
+            console.log(
+              `Skipping ${threadName} as lead message manifest does not exist`
+            );
+            return null;
+          }
           const data = await readEntryAsJson<MessageManifestFileFormat>(
             leadFileNode
           );
-          if (!data) return null;
+          if (!data) {
+            console.log(
+              `Skipping ${threadName} as failed to read lead message manifest`
+            );
+            return null;
+          }
           const image = data.image?.uri
             ? resolveFileInTree(tree, data.image?.uri)
             : null;
           const imageUrl = image ? await createObjectUrl(image) : null;
-          if (image)
-            return {
-              id: threadName,
-              name: data.title,
-              participants: data.participants,
-              imageUrl: imageUrl,
-            };
+          return {
+            id: threadName,
+            name: data.title,
+            participants: data.participants,
+            imageUrl: imageUrl,
+          };
         })
       )
     )
