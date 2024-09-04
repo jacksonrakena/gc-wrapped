@@ -8,7 +8,6 @@ const CONTENT_IGNORABLE = [/(.+) sent an attachment./];
 export async function analyse(files: MessageManifestFileFormat[]) {
   try {
     const t0 = Date.now();
-
     const messages = files
       .flatMap((e) => e.messages)
       .filter((a) => IGNORE_REGEXES.every((reg) => !reg.test(a.content ?? "")));
@@ -117,6 +116,13 @@ export async function analyse(files: MessageManifestFileFormat[]) {
             deepIncrement(totalMentionsByUser, p);
           }
         }
+      }
+    }
+
+    for (const bin of Object.keys(messagesByMonthAndAuthor)) {
+      for (const author of participants) {
+        if (!messagesByMonthAndAuthor[bin][author])
+          messagesByMonthAndAuthor[bin][author] = 0;
       }
     }
 
