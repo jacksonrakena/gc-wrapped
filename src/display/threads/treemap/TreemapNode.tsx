@@ -1,3 +1,5 @@
+import { TreemapNode as TreemapNodeProps } from "recharts/types/util/types";
+
 const COLORS = [
   "#8889DD",
   "#9597E4",
@@ -15,9 +17,9 @@ export const TreemapNode = ({
   height,
   index,
   count,
-  rank,
   name,
-}) => {
+}: TreemapNodeProps) => {
+  if (!root?.children) return <></>;
   return (
     <g>
       <rect
@@ -28,7 +30,7 @@ export const TreemapNode = ({
         style={{
           fill:
             depth < 2
-              ? COLORS[Math.floor((index / root.children.length) * 6)]
+              ? COLORS[Math.floor((index / root?.children.length) * 6)]
               : "#ffffff00",
           stroke: "#fff",
           strokeWidth: 2 / (depth + 1e-10),
