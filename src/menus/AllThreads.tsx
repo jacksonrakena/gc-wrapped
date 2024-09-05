@@ -25,7 +25,10 @@ export const AllThreads = () => {
           <Heading size="md">Your threads:</Heading>
           <Stack spacing={8}>
             {availableThreads.data
-              .sort((a, b) => b.participants.length - a.participants.length)
+              .sort(
+                (a, b) =>
+                  b.firstManifestMessageCount - a.firstManifestMessageCount
+              )
               .map((l) => (
                 <>
                   <Card
@@ -40,6 +43,16 @@ export const AllThreads = () => {
                         {l.imageUrl && <Avatar size={"2xl"} src={l.imageUrl} />}
                         <Flex alignItems={"start"} direction={"column"}>
                           <Heading size="sm">{l.name}</Heading>
+                          <Text
+                            textColor={"GrayText"}
+                            pt="2"
+                            fontSize="sm"
+                            textAlign={"left"}
+                          >
+                            {l.firstManifestMessageCount.toLocaleString()}
+                            {l.isMoreThanOneManifest && "+"} messages,{" "}
+                            {l.participants.length} participants
+                          </Text>
                           <Text textAlign={"left"} pt="2" fontSize="sm">
                             {l.participants.map((e) => e.name).join(", ")}
                           </Text>

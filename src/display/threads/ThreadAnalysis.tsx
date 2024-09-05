@@ -64,7 +64,7 @@ export const ThreadAnalysisContent = ({
             <Stack alignItems={"start"} direction={"column"}>
               <Heading size="sm">{data.meta.title}</Heading>
               <Box>
-                Analysed {data.messages.length} messages from{" "}
+                Analysed {data.messages.length.toLocaleString()} messages from{" "}
                 {data.participants.length} participants in {data.totalTime}ms
               </Box>
               <Text textAlign={"left"} pt="2" fontSize="sm">

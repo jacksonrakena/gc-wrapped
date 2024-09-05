@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
-import { resolveFolderInTree, resolveFileInTree } from "../files/vfs";
-import { readEntryAsJson, createObjectUrl } from "../files/zip";
+import { resolveFileInTree, resolveFolderInTree } from "../files/vfs";
+import { createObjectUrl, readEntryAsJson } from "../files/zip";
 import { MessageManifestFileFormat } from "../schema";
 import { platformNameAtom } from "./platform";
 import { virtualFileTreeAtom } from "./tree";
@@ -47,21 +47,18 @@ export const availableThreadsAtom = loadable(
             id: threadName,
             name: data.title,
             participants: data.participants,
+            firstManifestMessageCount: data.messages.length,
+            isMoreThanOneManifest:
+              Object.keys(resolveFolderInTree(inboxNode, threadName)!).filter(
+                (e) => e.startsWith("message_") && e.endsWith(".json")
+              ).length > 1,
             imageUrl: imageUrl,
           };
         })
       )
     )
       .filter((e) => e)
-      .map(
-        (e) =>
-          e as {
-            id: string;
-            name: string;
-            participants: { name: string }[];
-            imageUrl: string | null;
-          }
-      );
+      .map((e) => e!);
     return threadNames;
   })
 );
